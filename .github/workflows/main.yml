@@ -10,7 +10,12 @@
 #
 # 2. Change the values for the REGISTRY_NAME, CLUSTER_NAME, CLUSTER_RESOURCE_GROUP and NAMESPACE environment variables (below).
 
-on: [push]
+on:
+  push:
+    branches: [master]
+    paths:
+    - 'azure-voting-app-redis-master/**'
+
 
 # Environment variables available to all jobs and steps in this workflow
 env:
@@ -20,7 +25,8 @@ env:
   NAMESPACE: default
   
 jobs:
-  build:
+  build-and-deploy:
+    name: Build and deploy
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
