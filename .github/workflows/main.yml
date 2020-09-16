@@ -34,7 +34,7 @@ jobs:
     
     # Container build and push to a Azure Container registry (ACR)
     - run: |
-        docker build ./azure-voting-app-redis-master -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+        docker build ./azure-voting-app-redis-master/azure-vote -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
         docker push ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
     
     # Set the target Azure Kubernetes Service (AKS) cluster. 
