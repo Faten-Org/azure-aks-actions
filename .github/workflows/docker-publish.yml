@@ -40,29 +40,29 @@ jobs:
           docker push $IMAGE_ID:${{ github.sha }}
 
   # Deploy to AKS
-#   build-and-deploy:
-#     needs: push
-#     name: Deploy
-#     runs-on: ubuntu-latest
-#     steps:
-#     - uses: actions/checkout@master
+  build-and-deploy:
+    needs: push
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
 
     # Set the target Azure Kubernetes Service (AKS) cluster. 
-#     - uses: azure/aks-set-context@v1
-#       with:
-#         creds: '${{ secrets.AZURE_CREDENTIALS }}'
-#         cluster-name: ${{ env.CLUSTER_NAME }}
-#         resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
 
     # Create namespace if doesn't exist
-#     - run: |
-#         kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
+    - run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
 
     # Deploy app to AKS
-#     - uses: azure/k8s-deploy@v1
-#       with:
-#         manifests: |
-#           manifests/azure-vote.yaml
-#         images: |
-#           ghcr.io/faten-org/azure-vote:${{ github.sha }}
-#         namespace: ${{ env.NAMESPACE }}
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          manifests/azure-vote.yaml
+        images: |
+          ghcr.io/faten-org/azure-vote:${{ github.sha }}
+        namespace: ${{ env.NAMESPACE }}
