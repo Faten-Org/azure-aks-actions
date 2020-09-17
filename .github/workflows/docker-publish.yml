@@ -1,0 +1,142 @@
+name: Docker
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+    paths:
+    - 'azure-voting-app-redis-master/azure-vote/**'
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+env:
+  IMAGE_NAME: azure-vote # todo remove?
+  #REGISTRY_NAME: pierluigi # todo remove
+  CLUSTER_NAME: aks
+  CLUSTER_RESOURCE_GROUP: aks-demos
+  NAMESPACE: default
+
+
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  # test:
+  #  runs-on: ubuntu-latest    
+  #  steps:
+      
+  #    - uses: actions/checkout@v2
+
+  #    - name: Run tests
+  #      run: |
+  #        if [ -f docker-compose.test.yml ]; then
+  #          docker-compose --file docker-compose.test.yml build
+  #          docker-compose --file docker-compose.test.yml run sut
+  #        else
+  #          docker build . --file Dockerfile
+  #        fi
+  #      working-directory: ./azure-voting-app-redis-master/azure-vote
+
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    # Ensure test job passes before pushing image.
+    # needs: test
+
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+    
+    #    docker build ./azure-voting-app-redis-master/azure-vote -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    #    docker push ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    
+    #       - name: Build image
+    #         # run: docker build . --file Dockerfile --tag $IMAGE_NAME
+    #         run: docker build -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    #         working-directory: ./azure-voting-app-redis-master/azure-vote
+
+      - name: Log into GitHub Container Registry
+      # TODO: Create a PAT with `read:packages` and `write:packages` scopes and save it as an Actions secret `CR_PAT`
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and publish image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          
+          docker build ./azure-voting-app-redis-master/azure-vote -t ${{IMAGE_ID}}:${{ github.sha }}
+          docker push $IMAGE_ID:${{ github.sha }}
+    
+
+#           # Strip git ref prefix from version
+#           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+#           # Strip "v" prefix from tag name
+#           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+#           # Use Docker `latest` tag convention
+#           [ "$VERSION" == "master" ] && VERSION=latest
+
+#           echo IMAGE_ID=$IMAGE_ID
+#           echo VERSION=$VERSION
+
+#           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+#           docker push $IMAGE_ID:$VERSION
+
+  # Deploy to AKS
+  build-and-deploy:
+    needs: push
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    # Connect to Azure Container registry (ACR) TODO REMOVE
+    #- uses: azure/docker-login@v1
+    #  with:
+    #    login-server: ${{ env.REGISTRY_NAME }}.azurecr.io
+    #    username: ${{ secrets.REGISTRY_USERNAME }} 
+    #    password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    # Container build and push to a Azure Container registry (ACR)
+    #- run: |
+    #    docker build ./azure-voting-app-redis-master/azure-vote -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    #    docker push ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    
+    
+    # Set the target Azure Kubernetes Service (AKS) cluster. 
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+    
+    # Create namespace if doesn't exist
+    - run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
+    
+    # Create imagepullsecret for Azure Container registry (ACR)
+    #- uses: azure/k8s-create-secret@v1
+    #  with:
+    #    container-registry-url: ${{ env.REGISTRY_NAME }}.azurecr.io
+    #    container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+    #    container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+    #    secret-name: ${{ env.REGISTRY_NAME }}-registry-connection
+    #    namespace: ${{ env.NAMESPACE }}
+    
+    # Deploy app to AKS
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          manifests/azure-vote.yaml
+        images: |
+          ghcr.io/faten-org/azure-vote:${{ github.sha }} # TODO de-hardcode
+        #imagepullsecrets: |
+        #  ${{ env.REGISTRY_NAME }}-registry-connection
+        namespace: ${{ env.NAMESPACE }}
