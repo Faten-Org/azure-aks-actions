@@ -25,44 +25,44 @@ jobs:
     steps:
       - uses: actions/checkout@v2
  
-      - name: Log into GitHub Container Registry
       # TODO: Create a PAT with `read:packages` and `write:packages` scopes and save it as an Actions secret `CR_PAT`
+      - name: Log into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
     
-      - name: Push image to GitHub Container Registry
-        run: |
-          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+#       - name: Push image to GitHub Container Registry
+#         run: |
+#           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+#           # Change all uppercase to lowercase
+#           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          docker build ./azure-voting-app-redis-master/azure-vote -t ${{IMAGE_ID}}:${{ github.sha }}
-          docker push $IMAGE_ID:${{ github.sha }}
+#           docker build ./azure-voting-app-redis-master/azure-vote -t ${{IMAGE_ID}}:${{ github.sha }}
+#           docker push $IMAGE_ID:${{ github.sha }}
 
   # Deploy to AKS
-  build-and-deploy:
-    needs: push
-    name: Deploy
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
+#   build-and-deploy:
+#     needs: push
+#     name: Deploy
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@master
 
     # Set the target Azure Kubernetes Service (AKS) cluster. 
-    - uses: azure/aks-set-context@v1
-      with:
-        creds: '${{ secrets.AZURE_CREDENTIALS }}'
-        cluster-name: ${{ env.CLUSTER_NAME }}
-        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+#     - uses: azure/aks-set-context@v1
+#       with:
+#         creds: '${{ secrets.AZURE_CREDENTIALS }}'
+#         cluster-name: ${{ env.CLUSTER_NAME }}
+#         resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
 
     # Create namespace if doesn't exist
-    - run: |
-        kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
+#     - run: |
+#         kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
 
     # Deploy app to AKS
-    - uses: azure/k8s-deploy@v1
-      with:
-        manifests: |
-          manifests/azure-vote.yaml
-        images: |
-          ghcr.io/faten-org/azure-vote:${{ github.sha }}
-        namespace: ${{ env.NAMESPACE }}
+#     - uses: azure/k8s-deploy@v1
+#       with:
+#         manifests: |
+#           manifests/azure-vote.yaml
+#         images: |
+#           ghcr.io/faten-org/azure-vote:${{ github.sha }}
+#         namespace: ${{ env.NAMESPACE }}
