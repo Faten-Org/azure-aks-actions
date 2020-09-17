@@ -128,7 +128,7 @@ jobs:
         manifests: |
           manifests/azure-vote.yaml
         images: |
-          ghcr.io/faten-org/azure-vote:latest
+          ghcr.io/faten-org/azure-vote:${{ github.sha }}
         imagepullsecrets: |
           ${{ env.REGISTRY_NAME }}-registry-connection
         namespace: ${{ env.NAMESPACE }}
