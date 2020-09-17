@@ -14,19 +14,18 @@ on:
 
 env:
   IMAGE_NAME: azure-vote
+  CLUSTER_NAME: aks
+  CLUSTER_RESOURCE_GROUP: aks-demos
+  NAMESPACE: default
 
-defaults:
-  run:
-    working-directory: ./azure-voting-app-redis-master/azure-vote
 
 jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   test:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-latest    
     steps:
-
+      
       - uses: actions/checkout@v2
 
       - name: Run tests
@@ -37,6 +36,7 @@ jobs:
           else
             docker build . --file Dockerfile
           fi
+        working-directory: ./azure-voting-app-redis-master/azure-vote
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
@@ -52,6 +52,7 @@ jobs:
 
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
+        working-directory: ./azure-voting-app-redis-master/azure-vote
 
       - name: Log into GitHub Container Registry
       # TODO: Create a PAT with `read:packages` and `write:packages` scopes and save it as an Actions secret `CR_PAT`
@@ -78,3 +79,29 @@ jobs:
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
+
+  # Deploy to AKS
+  build-and-deploy:
+    needs: push
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    
+    # Set the target Azure Kubernetes Service (AKS) cluster. 
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+    
+    # Create namespace if doesn't exist
+    - run: |
+        kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
+    
+    # Deploy app to AKS
+    - uses: azure/k8s-deploy@v1
+      with:
+        manifests: |
+          manifests/azure-vote.yaml
+        namespace: ${{ env.NAMESPACE }}
