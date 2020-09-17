@@ -14,7 +14,7 @@ on:
 
 env:
   IMAGE_NAME: azure-vote # todo remove?
-  REGISTRY_NAME: pierluigi # todo remove
+  #REGISTRY_NAME: pierluigi # todo remove
   CLUSTER_NAME: aks
   CLUSTER_RESOURCE_GROUP: aks-demos
   NAMESPACE: default
@@ -23,27 +23,27 @@ env:
 jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
-    runs-on: ubuntu-latest    
-    steps:
+  # test:
+  #  runs-on: ubuntu-latest    
+  #  steps:
       
-      - uses: actions/checkout@v2
+  #    - uses: actions/checkout@v2
 
-      - name: Run tests
-        run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            docker build . --file Dockerfile
-          fi
-        working-directory: ./azure-voting-app-redis-master/azure-vote
+  #    - name: Run tests
+  #      run: |
+  #        if [ -f docker-compose.test.yml ]; then
+  #          docker-compose --file docker-compose.test.yml build
+  #          docker-compose --file docker-compose.test.yml run sut
+  #        else
+  #          docker build . --file Dockerfile
+  #        fi
+  #      working-directory: ./azure-voting-app-redis-master/azure-vote
 
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
     # Ensure test job passes before pushing image.
-    needs: test
+    # needs: test
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -90,16 +90,16 @@ jobs:
     - uses: actions/checkout@master
     
     # Connect to Azure Container registry (ACR) TODO REMOVE
-    - uses: azure/docker-login@v1
-      with:
-        login-server: ${{ env.REGISTRY_NAME }}.azurecr.io
-        username: ${{ secrets.REGISTRY_USERNAME }} 
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+    #- uses: azure/docker-login@v1
+    #  with:
+    #    login-server: ${{ env.REGISTRY_NAME }}.azurecr.io
+    #    username: ${{ secrets.REGISTRY_USERNAME }} 
+    #    password: ${{ secrets.REGISTRY_PASSWORD }}
     
     # Container build and push to a Azure Container registry (ACR)
-    - run: |
-        docker build ./azure-voting-app-redis-master/azure-vote -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
-        docker push ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    #- run: |
+    #    docker build ./azure-voting-app-redis-master/azure-vote -t ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
+    #    docker push ${{ env.REGISTRY_NAME }}.azurecr.io/azure-vote:${{ github.sha }}
     
     
     # Set the target Azure Kubernetes Service (AKS) cluster. 
@@ -114,21 +114,21 @@ jobs:
         kubectl create namespace ${{ env.NAMESPACE }} --dry-run -o json | kubectl apply -f -
     
     # Create imagepullsecret for Azure Container registry (ACR)
-    - uses: azure/k8s-create-secret@v1
-      with:
-        container-registry-url: ${{ env.REGISTRY_NAME }}.azurecr.io
-        container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
-        container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
-        secret-name: ${{ env.REGISTRY_NAME }}-registry-connection
-        namespace: ${{ env.NAMESPACE }}
+    #- uses: azure/k8s-create-secret@v1
+    #  with:
+    #    container-registry-url: ${{ env.REGISTRY_NAME }}.azurecr.io
+    #    container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+    #    container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+    #    secret-name: ${{ env.REGISTRY_NAME }}-registry-connection
+    #    namespace: ${{ env.NAMESPACE }}
     
     # Deploy app to AKS
     - uses: azure/k8s-deploy@v1
       with:
         manifests: |
           manifests/azure-vote.yaml
-        images: |
-          ghcr.io/faten-org/azure-vote:${{ github.sha }}
-        imagepullsecrets: |
-          ${{ env.REGISTRY_NAME }}-registry-connection
+        #images: |
+        #  ghcr.io/faten-org/azure-vote:${{ github.sha }}
+        #imagepullsecrets: |
+        #  ${{ env.REGISTRY_NAME }}-registry-connection
         namespace: ${{ env.NAMESPACE }}
