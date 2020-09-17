@@ -9,7 +9,7 @@
 #     c. AZURE_CREDENTIALS with the output of `az ad sp create-for-rbac --sdk-auth`
 #
 # 2. Change the values for the REGISTRY_NAME, CLUSTER_NAME, CLUSTER_RESOURCE_GROUP and NAMESPACE environment variables (below).
-
+name: Build and deploy
 on:
   push:
     branches: [master]
