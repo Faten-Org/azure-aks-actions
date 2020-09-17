@@ -29,12 +29,12 @@ jobs:
       - name: Log into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
     
-#       - name: Push image to GitHub Container Registry
-#         run: |
-#           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
-
-#           # Change all uppercase to lowercase
-#           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+      - name: Push image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          echo $IMAGE_ID
 
 #           docker build ./azure-voting-app-redis-master/azure-vote -t ${{IMAGE_ID}}:${{ github.sha }}
 #           docker push $IMAGE_ID:${{ github.sha }}
