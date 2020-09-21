@@ -5,8 +5,8 @@ on:
     # Publish `master` as Docker `latest` image.
     branches:
       - master
-    # paths:
-    # - 'azure-voting-app-redis-master/azure-vote/**'
+    paths:
+      - 'azure-voting-app-redis-master/azure-vote/**'
 
     # Publish `v1.2.3` tags as releases.
     tags:
@@ -47,6 +47,14 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: start deployment
+      uses: bobheadxi/deployments@master
+      id: deployment
+      with:
+        step: start
+        token: ${{ secrets.GITHUB_TOKEN }}
+        env: staging
+
     # Set the target Azure Kubernetes Service (AKS) cluster. 
     - uses: azure/aks-set-context@v1
       with:
@@ -66,3 +74,19 @@ jobs:
         images: |
           ghcr.io/faten-org/azure-vote:${{ github.sha }}
         namespace: ${{ env.NAMESPACE }}
+        
+    # Update deployment with IP
+      id: ingress    
+    - run: |
+        LB_IP=$(kubectl get svc azure-vote-front -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
+        echo "::set-output name=lb_ip::$LB_IP"
+
+    - name: update deployment status
+      uses: bobheadxi/deployments@master
+      if: always()
+      with:
+        step: finish
+        token: ${{ secrets.GITHUB_TOKEN }}
+        status: ${{ job.status }}
+        deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+        env_url: ${{ steps.ingress.outputs.lb_ip }}
