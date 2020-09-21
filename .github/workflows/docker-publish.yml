@@ -79,7 +79,8 @@ jobs:
       id: ingress    
     - run: |
         LB_IP=$(kubectl get svc azure-vote-front -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
-        echo "::set-output name=lb_ip::$LB_IP"
+        echo $LB_IP
+        echo ::set-output name=lb_ip::$LB_IP
 
     - name: update deployment status
       uses: bobheadxi/deployments@master
@@ -89,4 +90,4 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         status: ${{ job.status }}
         deployment_id: ${{ steps.deployment.outputs.deployment_id }}
-        env_url: "https://google.com"
+        env_url: ${{ steps.ingress.outputs.lb_ip }}
