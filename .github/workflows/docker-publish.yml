@@ -81,9 +81,6 @@ jobs:
         LB_IP=$(kubectl get svc azure-vote-front -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
         echo ::set-env name=INGRESS_IP::$(echo "http://$LB_IP")
   
-    - run: |
-        echo $INGRESS_IP
-        
     - name: update deployment status
       uses: bobheadxi/deployments@master
       if: always()
