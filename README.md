@@ -31,4 +31,4 @@ In this example, the workflow is already created in .github/workflows/main.yml. 
 
 ## Pro Tip - Stop the AKS cluster when not in use
 
-(Stop and Start an Azure Kubernetes Service (AKS) cluster (preview))[https://docs.microsoft.com/en-gb/azure/aks/start-stop-cluster]
+[Stop and Start an Azure Kubernetes Service (AKS) cluster (preview)](https://docs.microsoft.com/en-gb/azure/aks/start-stop-cluster)
