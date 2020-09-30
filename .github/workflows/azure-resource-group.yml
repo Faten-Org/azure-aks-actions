@@ -62,11 +62,11 @@ jobs:
             az config set extension.use_dynamic_install=yes_without_prompt 
             az extension add --upgrade -n aks-preview
             az aks start --name $AKS_NAME --resource-group $RG_NAME
-            LB_IP=$(kubectl get svc azure-vote-front -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
-            echo "::set-output name=aks_public_ip::$LB_IP"
-            
+            # TODO fix kubectl not found
+            #LB_IP=$(kubectl get svc azure-vote-front -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
+            #echo "::set-output name=aks_public_ip::$LB_IP"
             # TODO post reply into issue or update deployment
-            echo $LB_IP
+            #echo $LB_IP
       - name: Stop AKS
         uses: azure/CLI@v1
         if: ${{ steps.aks_crud.outputs.aks_stop }}
