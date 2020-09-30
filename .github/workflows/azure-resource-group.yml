@@ -69,7 +69,7 @@ jobs:
             azure_region="southeastasia"
             rgjson=$(az group create --name  $resource_group_name --location $azure_region )
             echo "$rgjson"
-            aksjson=$(az aks create --resource-group $resource_group_name --name aks --node-count 1 --generate-ssh-keys )
+            aksjson=$(az aks create --resource-group $resource_group_name --name aks --node-count 1 )
             echo "$aksjson"
       - name: Delete Azure Resource Group
         uses: azure/CLI@v1
