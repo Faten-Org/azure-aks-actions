@@ -2,16 +2,16 @@
 # It currently starts the creation of a new resource group
 # when a Project Card (e.g. Issue inside of a Project Board) is moved to the "In progress" column.
 
-name: Manage Resource Groups
+name: Start or Stop Azure Kubernetes Service
 
 on:
   project_card
 
 env:
-  COL_TODO: 'To do'
-  COL_INPG: 'In progress'
-  COL_DONE: 'Done'
-  ORG_NAME: ${{ github.repository_owner }}
+  COL_START: 'In progress'
+  COL_STOP: 'Done'
+  RG_NAME: 'aks-demos'
+  AKS_NAME: 'aks'
 
 jobs:
   update-project:
@@ -20,37 +20,28 @@ jobs:
   
     steps:
       - uses: actions/github-script@v2
-        name: Create or tear down resource group
-        id: rg_crud
+        name: Start or stop
+        id: aks_crud
         # This is to ensure the project card being moved is an "issue" and not a "note"
         if: contains(github.event.project_card.content_url, 'issues/')
         with:
-          # github-token: ${{ secrets.ACTION_PAT }}
           script: |
-            const { COL_TODO, COL_INPG, COL_DONE, ORG_NAME} = process.env;
+            const { COL_INPG, COL_DONE } = process.env;
             const {column_id, content_url } = context.payload.project_card;
-                    
+
             // Retrieve column info
             const { data: { name: column_name }}  = await github.projects.getColumn({
               column_id,
             });
 
-            // Get issue details from the project card
-            let { data : { labels, body, state, title, number, user }} = await github.request(`GET ${content_url}`);
-            const rg_name = title.toLowerCase().replace(/ /g,'-').replace(/[^\w-]+/g,'');
-            core.setOutput('rg_name', rg_name);
-
             switch (column_name) {
-              case COL_TODO:
-                console.log("A new Issue was added to the Project board. Nothing to do here!");
-                break;
               case COL_INPG:
-                console.log("A new request for a demo environment was approved. Initiating sequence...", rg_name);      
-                core.setOutput('rg_create', true);
+                console.log("Restarting AKS...");      
+                core.setOutput('aks_start', true);
                 break;
               case COL_DONE:
-                console.log("Tear down demo environment", rg_name);
-                core.setOutput('rg_teardown', true);
+                console.log("Stopping AKS...");
+                core.setOutput('aks_stop', true);
                 break;
               default:
                 console.log(`Column ${column_name} not found in Project Board. Skipping...`); 
@@ -58,25 +49,18 @@ jobs:
             }
       - name: azure authentication
         uses: azure/login@v1
-        if: ${{ steps.rg_crud.outputs.rg_create || steps.rg_crud.outputs.rg_teardown }}
+        if: ${{ steps.aks_crud.outputs.aks_start || steps.aks_crud.outputs.aks_stop }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Create Azure Resource Group
-        if: ${{ steps.rg_crud.outputs.rg_create && steps.rg_crud.outputs.rg_name }}
+      - name: Start AKS
+        if: ${{ steps.aks_crud.outputs.aks_start }}
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            resource_group_name=${{ steps.rg_crud.outputs.rg_name }}            
-            azure_region="southeastasia"
-            rgjson=$(az group create --name  $resource_group_name --location $azure_region )
-            echo "$rgjson"
-            az ad sp create-for-rbac --sdk-auth
-            aksjson=$(az aks create --resource-group $resource_group_name --name aks --node-count 1 --generate-ssh-keys )
-            echo "$aksjson"
-      - name: Delete Azure Resource Group
+            az aks start --name $AKS_NAME --resource-group $RG_NAME
+      - name: Stop AKS
         uses: azure/CLI@v1
-        if: ${{ steps.rg_crud.outputs.rg_teardown && steps.rg_crud.outputs.rg_name }}
+        if: ${{ steps.aks_crud.outputs.aks_stop }}
         with:
           inlineScript: |
-            # tear down resource group
-            az group delete --name ${{ steps.rg_crud.outputs.rg_name }} --yes --no-wait
+             az aks stop --name $AKS_NAME --resource-group $RG_NAME
