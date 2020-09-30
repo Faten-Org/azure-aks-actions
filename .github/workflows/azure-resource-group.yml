@@ -26,7 +26,7 @@ jobs:
         if: contains(github.event.project_card.content_url, 'issues/')
         with:
           script: |
-            const { COL_INPG, COL_DONE } = process.env;
+            const { COL_START, COL_STOP } = process.env;
             const {column_id, content_url } = context.payload.project_card;
 
             // Retrieve column info
@@ -35,11 +35,11 @@ jobs:
             });
 
             switch (column_name) {
-              case COL_INPG:
+              case COL_START:
                 console.log("Restarting AKS...");      
                 core.setOutput('aks_start', true);
                 break;
-              case COL_DONE:
+              case COL_STOP:
                 console.log("Stopping AKS...");
                 core.setOutput('aks_stop', true);
                 break;
