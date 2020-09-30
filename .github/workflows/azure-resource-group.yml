@@ -52,6 +52,8 @@ jobs:
         if: ${{ steps.aks_crud.outputs.aks_start || steps.aks_crud.outputs.aks_stop }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/setup-kubectl@v1
+        if: ${{ steps.aks_crud.outputs.aks_start || steps.aks_crud.outputs.aks_stop }}
       - name: Start AKS
         if: ${{ steps.aks_crud.outputs.aks_start }}
         uses: azure/CLI@v1
