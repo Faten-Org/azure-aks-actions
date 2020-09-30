@@ -19,7 +19,6 @@ jobs:
     runs-on: [ubuntu-latest]
   
     steps:
-      - uses: actions/checkout@main
       - uses: actions/github-script@v2
         name: Create or tear down resource group
         id: rg_crud
