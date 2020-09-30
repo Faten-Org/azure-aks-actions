@@ -26,7 +26,7 @@ jobs:
         # This is to ensure the project card being moved is an "issue" and not a "note"
         if: contains(github.event.project_card.content_url, 'issues/')
         with:
-          github-token: ${{ secrets.ACTION_PAT }}
+          # github-token: ${{ secrets.ACTION_PAT }}
           script: |
             const { COL_TODO, COL_INPG, COL_DONE, ORG_NAME} = process.env;
             const {column_id, content_url } = context.payload.project_card;
