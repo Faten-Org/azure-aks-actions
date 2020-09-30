@@ -70,4 +70,6 @@ jobs:
         if: ${{ steps.aks_crud.outputs.aks_stop }}
         with:
           inlineScript: |
+             az config set extension.use_dynamic_install=yes_without_prompt 
+             az extension add --upgrade -n aks-preview
              az aks stop --name $AKS_NAME --resource-group $RG_NAME
