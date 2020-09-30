@@ -58,6 +58,7 @@ jobs:
             }
       - name: azure authentication
         uses: azure/login@v1
+        if: ${{ steps.rg_crud.outputs.rg_create || steps.rg_crud.outputs.rg_teardown }}
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Create Azure Resource Group
