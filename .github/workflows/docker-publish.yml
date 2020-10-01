@@ -74,8 +74,8 @@ jobs:
         images: |
           ghcr.io/faten-org/azure-vote:${{ github.sha }}
         namespace: ${{ env.NAMESPACE }}
-        strategy: canary
-        percentage: 20
+        # strategy: canary
+        # percentage: 20
         
     # Update deployment with IP
       id: ingress    
