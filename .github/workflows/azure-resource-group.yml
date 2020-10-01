@@ -8,8 +8,8 @@ on:
   project_card
 
 env:
-  COL_START: 'In progress'
-  COL_STOP: 'Done'
+  COL_START: 'Running'
+  COL_STOP: 'Suspended'
   RG_NAME: 'aks-demos'
   AKS_NAME: 'aks'
 
