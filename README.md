@@ -1,6 +1,6 @@
 # GitHub Actions with AKS
 
-This sample creates a multi-container application in an Azure Kubernetes Service (AKS) cluster through GitHub Actions. The application interface has been built using Python / Flask. The data component is using Redis. This code is packaged into container images, uploaded to Azure Container Registry, and then run in an AKS cluster..
+This sample creates a multi-container application in an Azure Kubernetes Service (AKS) cluster through GitHub Actions. The application interface has been built using Python / Flask. The data component is using Redis. This code is packaged into container images, uploaded to GitHub Container Registry, and then run in an AKS cluster..
 
 ![diagram](screenshot.png "Diagram")
 
