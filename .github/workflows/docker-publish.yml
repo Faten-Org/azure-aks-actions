@@ -17,6 +17,7 @@ env:
   CLUSTER_NAME: aks
   CLUSTER_RESOURCE_GROUP: aks-demos
   NAMESPACE: default
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
 jobs:
   push:
