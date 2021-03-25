@@ -21,6 +21,7 @@ env:
 
 jobs:
   push:
+    name: Publish Package to GCR
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
@@ -43,8 +44,10 @@ jobs:
   # Deploy to AKS
   build-and-deploy:
     needs: push
-    name: Deploy
+    name: Deploy to staging
     runs-on: ubuntu-latest
+    environment: 
+      name: staging
     steps:
     - uses: actions/checkout@master
 
@@ -93,3 +96,15 @@ jobs:
         status: ${{ job.status }}
         deployment_id: ${{ steps.deployment.outputs.deployment_id }}
         env_url: ${{ env.INGRESS_IP }}
+
+# Promote to production (noop)      
+  promote-to-prod:
+    needs: build-and-deploy
+    name: Promote to Production
+    runs-on: ubuntu-latest
+    environment: 
+      name: prod
+    steps: 
+      - run: |
+          echo "Hello world, pretending to deploy..."
+    
